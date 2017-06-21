@@ -1318,6 +1318,7 @@ Lane* MappingHelpers::GetClosestLaneFromMap(const WayPoint& pos, RoadNetwork& ma
 	vector<pair<double, Lane*> > laneLinksList;
 	double d = 0;
 	double min_d = 9999999999;
+//	std::cout<<"************************************************"<<std::endl;
 	for(unsigned int j=0; j< map.roadSegments.size(); j ++)
 	{
 		for(unsigned int k=0; k< map.roadSegments.at(j).Lanes.size(); k ++)
@@ -1329,6 +1330,7 @@ Lane* MappingHelpers::GetClosestLaneFromMap(const WayPoint& pos, RoadNetwork& ma
 			{
 
 				d = distance2points(map.roadSegments.at(j).Lanes.at(k).points.at(pindex).pos, pos.pos);
+			//	std::cout<<map.roadSegments.at(j).Lanes.at(k).points.at(pindex).pos.x<<map.roadSegments.at(j).Lanes.at(k).points.at(pindex).pos.y<<std::endl;
 				if(d < min_d)
 					min_d = d;
 			}
@@ -1337,7 +1339,7 @@ Lane* MappingHelpers::GetClosestLaneFromMap(const WayPoint& pos, RoadNetwork& ma
 				laneLinksList.push_back(make_pair(min_d, &map.roadSegments.at(j).Lanes.at(k)));
 		}
 	}
-
+//std::cout<<"-----------------------------------------"<<std::endl;
 	if(laneLinksList.size() == 0) return 0;
 
 	min_d = 999999999;

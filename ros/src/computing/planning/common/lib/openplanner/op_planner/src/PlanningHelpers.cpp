@@ -1364,7 +1364,7 @@ WayPoint* PlanningHelpers::BuildPlanningSearchTreeV2(WayPoint* pStart,
 		assert(pH != 0);
 
 		nextLeafToTrace.erase(nextLeafToTrace.begin()+min_cost_index);
-
+//zhege distance become larger
 		double distance_to_goal = distance2points(pH->pos, goalPos.pos);
 		double angle_to_goal = UtilityH::AngleBetweenTwoAnglesPositive(UtilityH::FixNegativeAngle(pH->pos.a), UtilityH::FixNegativeAngle(goalPos.pos.a));
 		if( distance_to_goal <= 0.1 && angle_to_goal < M_PI_4)

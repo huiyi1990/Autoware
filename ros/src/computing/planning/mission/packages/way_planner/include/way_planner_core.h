@@ -63,10 +63,10 @@
 #include "waypoint_follower_msgs/LaneArray.h"
 #include "vehicle_socket/CanInfo.h"
 #include <visualization_msgs/MarkerArray.h>
-
-#include "MappingHelpers.h"
 #include "PlannerH.h"
-#include "RosHelpers.h"
+#include "MappingHelpers.h"
+//#include "PlannerH.h"
+#include "RosHelpers.h" 
 #include "SocketServer.h"
 
 namespace WayPlannerNS {
@@ -129,13 +129,13 @@ public:
 
 	WayPlannerParams()
 	{
-		bEnableReplanning	= false;
+		bEnableReplanning	= true;
 		bEnableHMI			= false;
 		bEnableSmoothing 	= false;
 		bEnableLaneChange 	= false;
 		bEnableRvizInput 	= true;
 		pathDensity			= 0.5;
-		mapSource 			= MAP_KML_FILE;
+		mapSource 			= MAP_AUTOWARE;
 	}
 };
 
@@ -147,11 +147,12 @@ protected:
 	AutowareRoadNetwork m_AwMap;
 	//geometry_msgs::Pose m_StartPos;
 	PlannerHNS::WayPoint m_CurrentPose;
-	//bool bStartPos;
+	PlannerHNS::WayPoint m_GoalPose;
+	bool bStartPos;
 	//bool bUsingCurrentPose;
 	int m_iCurrentGoalIndex;
 	std::vector<PlannerHNS::WayPoint> m_GoalsPos;
-	//bool bGoalPos;
+	bool bGoalPos;
 	geometry_msgs::Pose m_OriginPos;
 	PlannerHNS::VehicleState m_VehicleState;
 
