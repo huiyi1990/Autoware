@@ -124,7 +124,7 @@ bool PlanningHelpers::GetRelativeInfo(const std::vector<WayPoint>& trajectory, c
 	}
 
 	WayPoint prevWP = p0;
-	Mat3 rotationMat(-p1.pos.a);
+	Mat3 rotationMat(-p1.pos.a);    // !!!!! why -p1.pos.a
 	Mat3 translationMat(-p.pos.x, -p.pos.y);
 	Mat3 invRotationMat(p1.pos.a);
 	Mat3 invTranslationMat(p.pos.x, p.pos.y);
@@ -258,7 +258,11 @@ int PlanningHelpers::GetClosestNextPointIndex(const vector<WayPoint>& trajectory
 		double norm2 = pointNorm(v_2);
 		double dot_pro = v_1.x*v_2.x + v_1.y*v_2.y;
 		double a = UtilityH::FixNegativeAngle(acos(dot_pro/(norm1*norm2)));
-		if(a <= M_PI_2)
+
+        // if currp and currnext  relative angle is less than 90 degree, which means p is in between
+
+
+		if(a <= M_PI_2)   
 			min_index = min_index+1;
 	}
 
@@ -1364,7 +1368,7 @@ WayPoint* PlanningHelpers::BuildPlanningSearchTreeV2(WayPoint* pStart,
 		assert(pH != 0);
 
 		nextLeafToTrace.erase(nextLeafToTrace.begin()+min_cost_index);
-//zhege distance become larger
+//!!!!!!!!!!!!!!zhege distance become larger
 		double distance_to_goal = distance2points(pH->pos, goalPos.pos);
 		double angle_to_goal = UtilityH::AngleBetweenTwoAnglesPositive(UtilityH::FixNegativeAngle(pH->pos.a), UtilityH::FixNegativeAngle(goalPos.pos.a));
 		if( distance_to_goal <= 0.1 && angle_to_goal < M_PI_4)

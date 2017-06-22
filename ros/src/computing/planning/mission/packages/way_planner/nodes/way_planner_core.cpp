@@ -61,8 +61,8 @@ way_planner_core::way_planner_core()
 	m_pCurrGoal = 0;
 	m_iCurrentGoalIndex = 1;
 	m_bKmlMap = false;
-	bStartPos = false;
-	bGoalPos = false;
+	bStartPos = true;
+	bGoalPos = true;
 	//bUsingCurrentPose = false;
 	nh.getParam("/way_planner/pathDensity" 			, m_params.pathDensity);
 	nh.getParam("/way_planner/enableSmoothing" 		, m_params.bEnableSmoothing);
@@ -83,11 +83,11 @@ way_planner_core::way_planner_core()
 	nh.getParam("/way_planner/mapFileName" 			, m_params.KmlMapPath);
 
 
-	tf::StampedTransform transform;
-	GetTransformFromTF("map", "world", transform);
-	m_OriginPos.position.x  = transform.getOrigin().x();
-	m_OriginPos.position.y  = transform.getOrigin().y();
-	m_OriginPos.position.z  = transform.getOrigin().z();
+	// tf::StampedTransform transform;
+	// GetTransformFromTF("map", "world", transform);
+	// m_OriginPos.position.x  = transform.getOrigin().x();
+	// m_OriginPos.position.y  = transform.getOrigin().y();
+	// m_OriginPos.position.z  = transform.getOrigin().z();
 
 	pub_Paths = nh.advertise<waypoint_follower_msgs::LaneArray>("lane_waypoints_array", 1, true);
 	pub_PathsRviz = nh.advertise<visualization_msgs::MarkerArray>("global_waypoints_rviz", 1, true);
@@ -711,9 +711,15 @@ void way_planner_core::PlannerMainLoop()
 		{
 			std::cout <<"current pos: "<<m_CurrentPose.pos.ToString() << std::endl;
 			std::cout <<"goal pos: "<<m_GoalPose.pos.ToString()<<std::endl;
+			            m_CurrentPose.pos.x = -14777.300186157227;
+            m_CurrentPose.pos.y = -84744.421209335327;
+            m_CurrentPose.pos.a = 2.3411519998257231;
+            m_GoalPose.pos.x = -14782.307474136353;
+            m_GoalPose.pos.y = -84744.421209335327;
+            m_GoalPose.pos.a = 2.3411519998257231;
+
 			PlannerHNS::WayPoint startPoint = m_CurrentPose;
 			PlannerHNS::WayPoint goalPoint = m_GoalPose; //m_GoalsPos.at(m_iCurrentGoalIndex);
-PlannerHNS::WayPoint* pStart = PlannerHNS::MappingHelpers::GetClosestWaypointFromMap(m_GoalPose, m_Map);
 			if(m_GeneratedTotalPaths.size() > 0 && m_GeneratedTotalPaths.at(0).size() > 3)
 			{
 				if(m_params.bEnableReplanning)

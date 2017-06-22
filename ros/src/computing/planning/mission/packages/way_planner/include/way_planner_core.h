@@ -129,6 +129,7 @@ public:
 
 	WayPlannerParams()
 	{
+		KmlMapPath = "/home/zhenya/.autoware/data/map/vector_map/";
 		bEnableReplanning	= true;
 		bEnableHMI			= false;
 		bEnableSmoothing 	= false;
