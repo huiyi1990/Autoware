@@ -241,6 +241,7 @@ void LocalPlannerH::InitPolygons()
  {
  	PreCalculatedConditions* pValues = m_pCurrentBehaviorState->GetCalcParams();
 
+ 	// the distance to be calulated for long_front_distance
  	double critical_long_front_distance =  m_CarInfo.wheel_base/2.0 + m_CarInfo.length/2.0 + m_params.verticalSafetyDistance;
 	//double critical_long_back_distance =  m_CarInfo.length/2.0 + m_params.verticalSafetyDistance - m_CarInfo.wheel_base/2.0;
 
@@ -250,9 +251,9 @@ void LocalPlannerH::InitPolygons()
 
  	if(pValues->iCurrSafeTrajectory < 0)
  			pValues->iCurrSafeTrajectory = pValues->iCentralTrajectory;
-
-	if(pValues->iPrevSafeTrajectory < 0)
-		pValues->iPrevSafeTrajectory = pValues->iCentralTrajectory;
+//
+//	if(pValues->iPrevSafeTrajectory < 0)
+//		pValues->iPrevSafeTrajectory = pValues->iCentralTrajectory;
 
  	pValues->stoppingDistances.clear();
  	pValues->currentVelocity 		= car_state.speed;
@@ -856,10 +857,11 @@ bool LocalPlannerH::CalculateObstacleCosts(PlannerHNS::RoadNetwork& map, const P
 		const bool& bLive)
 {
 
+// if simulation use simulated pos
 	 if(!bLive)
 		 SimulateOdoPosition(dt, vehicleState);
 
-	UpdateCurrentLane(map, 3.0);
+	UpdateCurrentLane(map, 3.0); // set current lane
 
 	timespec costTimer;
 	UtilityH::GetTickCount(costTimer);

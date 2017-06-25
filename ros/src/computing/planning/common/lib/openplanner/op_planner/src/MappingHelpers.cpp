@@ -191,7 +191,7 @@ void MappingHelpers::ConstructRoadNetworkFromRosMessage(const std::vector<Utilit
 			lane_obj.speed = curr_lane_point.LimitVel;
 			lane_obj.id = curr_lane_point.LnID;
 			lane_obj.fromIds.push_back(curr_lane_point.BLID);
-			lane_obj.roadId = laneIDSeq;
+			lane_obj.roadId = laneIDSeq; // 1, ,2,3 sequence
 		}
 
 		WayPoint wp;
@@ -561,6 +561,41 @@ void MappingHelpers::ConstructRoadNetworkFromRosMessage(const std::vector<Utilit
 	}
 
 	cout << "Map loaded from data with " << roadLanes.size()  << " lanes" << endl;
+	WriteMapToFile("map_data_ana",map);
+	cout << "finish write map data to file"<< endl;
+}
+
+
+void MappingHelpers::WriteMapToFile(const std::string& fileName, const RoadNetwork& map)
+{
+	DataRW  dataFile;
+
+		ostringstream str_header;
+			str_header << "roadSegment_id" << "," << "roadSegment_type"  << ","<<"lane_id" << "," << "lane_roadid" << "," << "lane_num"<<","<< "lane_length"
+					<< "," << "lane_dir" << ","<< "lane_type" << ","<< "point_id" << ","<< "point_lane_id" << ","<< "point_left_lane_id" << ","
+					<< "point_right_lane_id" << ","<< "point_cost" << ","<< "point_x" << ","<< "point_y" << ",";
+			vector<string> dataList;
+		for(unsigned int rs = 0; rs < map.roadSegments.size(); rs++)
+			{
+				for(unsigned int i =0; i < map.roadSegments.at(rs).Lanes.size(); i++)
+				{
+					for(unsigned int p= 0; p < map.roadSegments.at(rs).Lanes.at(i).points.size(); p++)
+					{
+						stringstream strwp;
+
+						strwp<< map.roadSegments[rs].id<<","<<map.roadSegments[rs].roadType<<","<<map.roadSegments[rs].Lanes[i].id<<","
+								<<map.roadSegments[rs].Lanes[i].roadId<<","<<map.roadSegments[rs].Lanes[i].num<<","
+								<<map.roadSegments[rs].Lanes[i].length<<","<<map.roadSegments[rs].Lanes[i].dir<<","
+								<<map.roadSegments[rs].Lanes[i].type<<","<<map.roadSegments[rs].Lanes[i].points[p].id<<","
+								<<map.roadSegments[rs].Lanes[i].points[p].laneId<<","<<map.roadSegments[rs].Lanes[i].points[p].LeftLaneId<<","
+								<<map.roadSegments[rs].Lanes[i].points[p].RightLaneId<<","<<map.roadSegments[rs].Lanes[i].points[p].cost<<","
+								<<map.roadSegments[rs].Lanes[i].points[p].pos.x<<","<<map.roadSegments[rs].Lanes[i].points[p].pos.y<<",";
+						 dataList.push_back(strwp.str());
+					}
+				}
+			}
+
+		 dataFile.WriteLogData("/home/zhenya/", fileName, str_header.str(), dataList);
 }
 
 WayPoint* MappingHelpers::FindWaypoint(const int& id, RoadNetwork& map)
@@ -724,6 +759,8 @@ void MappingHelpers::GetWayPoint(const int& pid, const vector<AisanPointsFileRea
 	}
 }
 
+// get current lane did -> dtlane did->dtlane pid->point pid so way point is the point pid at dtlane
+//GetWayPoint(curr_lane_point.LnID, lane_obj.id(==curr_lane_point.LnID), curr_lane_point.RefVel,curr_lane_point.DID,dt_data, points_data,origin, wp);
 bool MappingHelpers::GetWayPoint(const int& id, const int& laneID,const double& refVel, const int& did,
 		const std::vector<UtilityHNS::AisanCenterLinesFileReader::AisanCenterLine>& dtpoints,
 		const std::vector<UtilityHNS::AisanPointsFileReader::AisanPoints>& points,

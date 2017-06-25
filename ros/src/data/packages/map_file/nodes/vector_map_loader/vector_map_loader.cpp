@@ -133,7 +133,7 @@ U createObjectArray(const std::string& file_path)
   // NOTE: Autoware want to use map messages with or without /use_sim_time.
   // Therefore we don't set obj_array.header.stamp.
   // obj_array.header.stamp = ros::Time::now();
-  obj_array.header.frame_id = "map";
+  obj_array.header.frame_id = "map"; // this frame is the vector map raw data frame, since the data is too large we can try to change that if we set local_map frame to the vector map
   obj_array.data = vector_map::parse<T>(file_path);
   return obj_array;
 }

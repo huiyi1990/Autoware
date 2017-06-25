@@ -133,7 +133,7 @@ public:
 		bEnableReplanning	= true;
 		bEnableHMI			= false;
 		bEnableSmoothing 	= false;
-		bEnableLaneChange 	= false;
+		bEnableLaneChange 	= true;
 		bEnableRvizInput 	= true;
 		pathDensity			= 0.5;
 		mapSource 			= MAP_AUTOWARE;
@@ -179,6 +179,9 @@ protected:
 	ros::Subscriber sub_nodes_list;
 	ros::Subscriber sub_map_points;
 	ros::Subscriber sub_map_lanes;
+	ros::Subscriber sub_map_lines;
+	ros::Subscriber sub_signals;
+	ros::Subscriber sub_map_vectors;
 	ros::Subscriber sub_map_nodes;
 	ros::Subscriber sup_stop_lines;
 	ros::Subscriber sub_dtlanes;
@@ -207,6 +210,10 @@ private:
   void callbackGetVMStopLines(const vector_map_msgs::StopLineArray& msg);
   void callbackGetVMCenterLines(const vector_map_msgs::DTLaneArray& msg);
   void callbackGetNodesList(const vector_map_msgs::NodeArray& msg);
+  void callbackGetVMLines(const vector_map_msgs::LineArray& msg);
+  void callbackGetVMSignals(const vector_map_msgs::SignalArray& msg);
+  void callbackGetVMVectors(const vector_map_msgs::VectorArray& msg);
+
 
   protected:
   	PlannerHNS::RoadNetwork m_Map;

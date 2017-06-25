@@ -121,7 +121,7 @@ void RosHelpers::ConvertFromRoadNetworkToAutowareVisualizeMapFormat(const Planne
 	total_color.a = 0.85;
 
 	visualization_msgs::Marker lane_waypoint_marker;
-	  lane_waypoint_marker.header.frame_id = "map";
+	  lane_waypoint_marker.header.frame_id = "local_map";
 	  lane_waypoint_marker.header.stamp = ros::Time();
 	  lane_waypoint_marker.ns = "vector_map_center_lines_rviz";
 	  lane_waypoint_marker.type = visualization_msgs::Marker::LINE_STRIP;
@@ -155,7 +155,7 @@ void RosHelpers::ConvertFromRoadNetworkToAutowareVisualizeMapFormat(const Planne
 		total_color.a = 0.85;
 
 		visualization_msgs::Marker stop_waypoint_marker;
-		  stop_waypoint_marker.header.frame_id = "map";
+		  stop_waypoint_marker.header.frame_id = "local_map";
 		  stop_waypoint_marker.header.stamp = ros::Time();
 		  stop_waypoint_marker.type = visualization_msgs::Marker::LINE_STRIP;
 		  stop_waypoint_marker.action = visualization_msgs::Marker::ADD;
@@ -204,7 +204,7 @@ void RosHelpers::ConvertFromPlannerHToAutowareVisualizePathFormat(const std::vec
 			visualization_msgs::MarkerArray& markerArray)
 {
 	visualization_msgs::Marker lane_waypoint_marker;
-	lane_waypoint_marker.header.frame_id = "map";
+	lane_waypoint_marker.header.frame_id = "local_map";
 	lane_waypoint_marker.header.stamp = ros::Time();
 	lane_waypoint_marker.ns = "global_lane_array_marker";
 	lane_waypoint_marker.type = visualization_msgs::Marker::LINE_STRIP;
@@ -270,7 +270,7 @@ void RosHelpers::ConvertFromPlannerHToAutowareVisualizePathFormat(const std::vec
 			visualization_msgs::MarkerArray& markerArray)
 {
 	visualization_msgs::Marker lane_waypoint_marker;
-	lane_waypoint_marker.header.frame_id = "map";
+	lane_waypoint_marker.header.frame_id = "local_map";
 	lane_waypoint_marker.header.stamp = ros::Time();
 	lane_waypoint_marker.ns = "global_lane_array_marker";
 	lane_waypoint_marker.type = visualization_msgs::Marker::LINE_STRIP;
@@ -311,7 +311,7 @@ void RosHelpers::ConvertFromPlannerHToAutowareVisualizePathFormat(const std::vec
 
 //		visualization_msgs::MarkerArray tmp_marker_array;
 //		visualization_msgs::Marker dir_marker;
-//		  dir_marker.header.frame_id = "map";
+//		  dir_marker.header.frame_id = "local_map";
 //		  dir_marker.header.stamp = ros::Time();
 //		  dir_marker.type = visualization_msgs::Marker::ARROW;
 //		  dir_marker.action = visualization_msgs::Marker::ADD;
@@ -349,7 +349,7 @@ void RosHelpers::createGlobalLaneArrayMarker(std_msgs::ColorRGBA color,
 		const waypoint_follower_msgs::LaneArray &lane_waypoints_array, visualization_msgs::MarkerArray& markerArray)
 {
   visualization_msgs::Marker lane_waypoint_marker;
-  lane_waypoint_marker.header.frame_id = "map";
+  lane_waypoint_marker.header.frame_id = "local_map";
   lane_waypoint_marker.header.stamp = ros::Time();
   lane_waypoint_marker.ns = "global_lane_array_marker";
   lane_waypoint_marker.type = visualization_msgs::Marker::LINE_STRIP;
@@ -383,7 +383,7 @@ void RosHelpers::createGlobalLaneArrayVelocityMarker(const waypoint_follower_msg
   visualization_msgs::MarkerArray tmp_marker_array;
   // display by markers the velocity of each waypoint.
   visualization_msgs::Marker velocity_marker;
-  velocity_marker.header.frame_id = "map";
+  velocity_marker.header.frame_id = "local_map";
   velocity_marker.header.stamp = ros::Time();
   velocity_marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
   velocity_marker.action = visualization_msgs::Marker::ADD;
@@ -430,7 +430,7 @@ void RosHelpers::createGlobalLaneArrayOrientationMarker(const waypoint_follower_
 {
   visualization_msgs::MarkerArray tmp_marker_array;
   visualization_msgs::Marker lane_waypoint_marker;
-  lane_waypoint_marker.header.frame_id = "map";
+  lane_waypoint_marker.header.frame_id = "local_map";
   lane_waypoint_marker.header.stamp = ros::Time();
   lane_waypoint_marker.type = visualization_msgs::Marker::ARROW;
   lane_waypoint_marker.action = visualization_msgs::Marker::ADD;

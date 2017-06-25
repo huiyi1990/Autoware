@@ -99,6 +99,8 @@ public:
 
 	static int ReplaceMyID(int& id, const std::vector<std::pair<int,int> >& rep_list);
 
+	static void WriteMapToFile(const std::string& fileName, const RoadNetwork& map);
+
 	static double m_USING_VER_ZERO;
 
 };

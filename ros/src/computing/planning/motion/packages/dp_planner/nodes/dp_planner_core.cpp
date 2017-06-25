@@ -431,6 +431,7 @@ void PlannerX::UpdatePlanningParams()
 	m_LocalPlanner.m_pCurrentBehaviorState->m_Behavior = PlannerHNS::INITIAL_STATE;
 }
 
+// initial pose (!!!! all the added translation no longer to be used , try to use tf to replace)
 void PlannerX::callbackGetInitPose(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg)
 {
 	if(!bInitPos)
@@ -479,6 +480,7 @@ void PlannerX::callbackGetRvizPoint(const geometry_msgs::PointStampedConstPtr& m
 	cloud_msg.header.frame_id = "map";
 	pub_cluster_cloud.publish(cloud_msg);
 
+	// bounding box to represent the obstacle, !!! while we need the obstacle behavior and predicted path for planning
 	if(m_TrackedClusters.size()>0)
 	{
 		jsk_recognition_msgs::BoundingBoxArray boxes_array;
@@ -758,9 +760,10 @@ void PlannerX::callbackGetWayPlannerPath(const waypoint_follower_msgs::LaneArray
 	if(msg->lanes.size() > 0)
 	{
 		m_WayPlannerPaths.clear();
-		bool bOldGlobalPath = m_LocalPlanner.m_TotalPath.size() == msg->lanes.size();
+		bool bOldGlobalPath = m_LocalPlanner.m_TotalPath.size() == msg->lanes.size(); // if the same size means same path ???
 		for(unsigned int i = 0 ; i < msg->lanes.size(); i++)
 		{
+			// path is vector of WayPoint
 			std::vector<PlannerHNS::WayPoint> path;
 			PlannerHNS::Lane* pPrevValid = 0;
 			for(unsigned int j = 0 ; j < msg->lanes.at(i).waypoints.size(); j++)
@@ -770,12 +773,14 @@ void PlannerX::callbackGetWayPlannerPath(const waypoint_follower_msgs::LaneArray
 						msg->lanes.at(i).waypoints.at(j).pose.pose.position.z,
 						tf::getYaw(msg->lanes.at(i).waypoints.at(j).pose.pose.orientation));
 				wp.v = msg->lanes.at(i).waypoints.at(j).twist.twist.linear.x;
+
+				// ????? what the following code doing ?????
 				wp.laneId = msg->lanes.at(i).waypoints.at(j).twist.twist.linear.y;
 				wp.stopLineID = msg->lanes.at(i).waypoints.at(j).twist.twist.linear.z;
 				wp.laneChangeCost = msg->lanes.at(i).waypoints.at(j).twist.twist.angular.x;
 				wp.LeftLaneId = msg->lanes.at(i).waypoints.at(j).twist.twist.angular.y;
 				wp.RightLaneId = msg->lanes.at(i).waypoints.at(j).twist.twist.angular.z;
-
+				// dt.dir ->wp.bdir
 				if(msg->lanes.at(i).waypoints.at(j).dtlane.dir == 0)
 					wp.bDir = PlannerHNS::FORWARD_DIR;
 				else if(msg->lanes.at(i).waypoints.at(j).dtlane.dir == 1)

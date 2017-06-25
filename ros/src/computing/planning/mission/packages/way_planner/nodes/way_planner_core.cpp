@@ -61,8 +61,8 @@ way_planner_core::way_planner_core()
 	m_pCurrGoal = 0;
 	m_iCurrentGoalIndex = 1;
 	m_bKmlMap = false;
-	bStartPos = true;
-	bGoalPos = true;
+	bStartPos = false;
+	bGoalPos = false;
 	//bUsingCurrentPose = false;
 	nh.getParam("/way_planner/pathDensity" 			, m_params.pathDensity);
 	nh.getParam("/way_planner/enableSmoothing" 		, m_params.bEnableSmoothing);
@@ -82,12 +82,6 @@ way_planner_core::way_planner_core()
 
 	nh.getParam("/way_planner/mapFileName" 			, m_params.KmlMapPath);
 
-
-	// tf::StampedTransform transform;
-	// GetTransformFromTF("map", "world", transform);
-	// m_OriginPos.position.x  = transform.getOrigin().x();
-	// m_OriginPos.position.y  = transform.getOrigin().y();
-	// m_OriginPos.position.z  = transform.getOrigin().z();
 
 	pub_Paths = nh.advertise<waypoint_follower_msgs::LaneArray>("lane_waypoints_array", 1, true);
 	pub_PathsRviz = nh.advertise<visualization_msgs::MarkerArray>("global_waypoints_rviz", 1, true);
@@ -140,11 +134,14 @@ if(m_params.bEnableHMI)
 
 	if(m_params.mapSource == MAP_AUTOWARE)
 	{
-		sub_map_points 	= nh.subscribe("/vector_map_info/point", 		1, &way_planner_core::callbackGetVMPoints, 		this);
-		sub_map_lanes 	= nh.subscribe("/vector_map_info/lane", 		1, &way_planner_core::callbackGetVMLanes, 		this);
-		sub_map_nodes 	= nh.subscribe("/vector_map_info/node", 		1, &way_planner_core::callbackGetVMNodes, 		this);
-		sup_stop_lines 	= nh.subscribe("/vector_map_info/stop_line",	1, &way_planner_core::callbackGetVMStopLines, 	this);
-		sub_dtlanes 	= nh.subscribe("/vector_map_info/dtlane", 		1, &way_planner_core::callbackGetVMCenterLines,	this);
+		sub_map_points 	= nh.subscribe("/local_vector_map_info/point", 		1, &way_planner_core::callbackGetVMPoints, 		this);
+		sub_map_lanes 	= nh.subscribe("/local_vector_map_info/lane", 		1, &way_planner_core::callbackGetVMLanes, 		this);
+		sub_map_nodes 	= nh.subscribe("/local_vector_map_info/node", 		1, &way_planner_core::callbackGetVMNodes, 		this);
+		sup_stop_lines 	= nh.subscribe("/local_vector_map_info/stop_line",	1, &way_planner_core::callbackGetVMStopLines, 	this);
+		sub_dtlanes 	= nh.subscribe("/local_vector_map_info/dtlane", 		1, &way_planner_core::callbackGetVMCenterLines,	this);
+		sub_map_lines    = nh.subscribe("/local_vector_map_info/line",         1, &way_planner_core::callbackGetVMLines,       this);
+		sub_signals = nh.subscribe("/local_vector_map_info/signal",          1,&way_planner_core::callbackGetVMSignals,this);
+		sub_map_vectors = nh.subscribe("/local_vector_map_info/vector",       1,&way_planner_core::callbackGetVMVectors,this);
 	}
 }
 
@@ -153,55 +150,45 @@ way_planner_core::~way_planner_core(){
 
 void way_planner_core::callbackGetGoalPose(const geometry_msgs::PoseStampedConstPtr &msg)
 {
-	//PlannerHNS::WayPoint wp;
-	m_GoalPose = PlannerHNS::WayPoint(msg->pose.position.x+m_OriginPos.position.x, msg->pose.position.y+m_OriginPos.position.y,
-			msg->pose.position.z+m_OriginPos.position.z, tf::getYaw(msg->pose.orientation));
-    bGoalPos = true;
-	// if(m_GoalsPos.size()==0)
-	// {
-	// 	ROS_INFO("Can Not add Goal, Select Start Position Fist !");
-	// }
-	// else
-	// {
-	// 	m_GoalsPos.push_back(wp);
-	// 	ROS_INFO("Received Goal Pose");
-	// }
+
+
+	// tf::StampedTransform transform;
+		// GetTransformFromTF("map", "world", transform);
+		// m_OriginPos.position.x  = transform.getOrigin().x();
+		// m_OriginPos.position.y  = transform.getOrigin().y();
+		// m_OriginPos.position.z  = transform.getOrigin().z();
+
+	if(msg->header.frame_id == "local_map")
+	{
+		m_GoalPose = PlannerHNS::WayPoint(msg->pose.position.x, msg->pose.position.y,
+			msg->pose.position.z, tf::getYaw(msg->pose.orientation));
+		bGoalPos = true;
+	}
+
 }
 
 void way_planner_core::callbackGetStartPose(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg)
 {
-//	if(m_GeneratedTotalPaths.size()>0)
-//	{
-//		PlannerHNS::RelativeInfo info;
-//		PlannerHNS::WayPoint p1(msg->pose.pose.position.x+m_OriginPos.position.x, msg->pose.pose.position.y+m_OriginPos.position.y, msg->pose.pose.position.z+m_OriginPos.position.z, tf::getYaw(msg->pose.pose.orientation));
-//		bool ret = PlannerHNS::PlanningHelpers::GetRelativeInfo(m_GeneratedTotalPaths.at(0), p1, info);
-//		std::cout << "Perp D: " << info.perp_distance << ", F D: "<< info.to_front_distance << ", B D: " << info.from_back_distance << ", F Index: "<< info.iFront << ", B Index: " << info.iBack << ", Angle: "<< info.angle_diff  << std::endl;
-//	}
 
-	 m_CurrentPose = PlannerHNS::WayPoint(msg->pose.pose.position.x+m_OriginPos.position.x, msg->pose.pose.position.y+m_OriginPos.position.y,
+	if(msg->header.frame_id == "local_map")
+	{
+
+	 m_CurrentPose = PlannerHNS::WayPoint(msg->pose.pose.position.x, msg->pose.pose.position.y,
 	 		msg->pose.pose.position.z, tf::getYaw(msg->pose.pose.orientation));
 
-bStartPos = true;
-	if(m_GoalsPos.size() <= 1)
-	{
-		m_GoalsPos.clear();
-		m_GoalsPos.push_back(m_CurrentPose);
-		ROS_INFO("Received Start pose");
+	 bStartPos = true;
 	}
+
 }
 
 void way_planner_core::callbackGetCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg)
 {
+	if(msg->header.frame_id == "local_map")
+		{
 	m_CurrentPose = PlannerHNS::WayPoint(msg->pose.position.x, msg->pose.position.y,
 			msg->pose.position.z, tf::getYaw(msg->pose.orientation));
+		}
 
-
-	if(m_GoalsPos.size() <= 1)
-	{
-		m_GoalsPos.clear();
-		m_GoalsPos.push_back(m_CurrentPose);
-		
-	}
 }
 
 void way_planner_core::callbackGetRobotOdom(const nav_msgs::OdometryConstPtr& msg)
@@ -249,16 +236,41 @@ void way_planner_core::callbackGetVMLanes(const vector_map_msgs::LaneArray& msg)
 	m_AwMap.bLanes = true;
 }
 
+void way_planner_core::callbackGetVMLines(const vector_map_msgs::LineArray& msg)
+{
+	ROS_INFO("Received Map Line Array");
+	m_AwMap.lines = msg;
+	m_AwMap.bLines = true;
+}
+
+void way_planner_core::callbackGetVMVectors(const vector_map_msgs::VectorArray& msg)
+{
+	ROS_INFO("Received Map Vector Array");
+	m_AwMap.vectors = msg;
+	m_AwMap.bVectors = true;
+}
+
+void way_planner_core::callbackGetVMSignals(const vector_map_msgs::SignalArray& msg)
+{
+	ROS_INFO("Received Map Signals");
+	m_AwMap.signals = msg;
+	m_AwMap.bSignals = true;
+}
+
 void way_planner_core::callbackGetVMNodes(const vector_map_msgs::NodeArray& msg)
 {
-	//ROS_INFO("Received Map Nodes");
+	ROS_INFO("Received Map Nodes");
+	m_AwMap.nodes = msg;
+	m_AwMap.bNodes = true;
 
 
 }
 
 void way_planner_core::callbackGetVMStopLines(const vector_map_msgs::StopLineArray& msg)
 {
-	//ROS_INFO("Received Map Stop Lines");
+	ROS_INFO("Received Map Stop Lines");
+	m_AwMap.stoplines = msg;
+	m_AwMap.bStopLines = true;
 }
 
 void way_planner_core::callbackGetVMCenterLines(const vector_map_msgs::DTLaneArray& msg)
@@ -359,13 +371,65 @@ void way_planner_core::UpdateRoadMap(const AutowareRoadNetwork& src_map, Planner
 		dts.push_back(dt);
 	}
 
+	std::vector<UtilityHNS::AisanLinesFileReader::AisanLine> line_data;
+	for (unsigned int i=0; i<src_map.lines.data.size();i++)
+	{
+		UtilityHNS::AisanLinesFileReader::AisanLine line;
+
+		line.BLID = src_map.lines.data.at(i).blid;
+		line.BPID = src_map.lines.data.at(i).bpid;
+		line.FLID = src_map.lines.data.at(i).flid;
+		line.FPID = src_map.lines.data.at(i).fpid;
+		line.LID  = src_map.lines.data.at(i).lid;
+
+		line_data.push_back(line);
+	}
+
+	std::vector<UtilityHNS::AisanStopLineFileReader::AisanStopLine> stop_line_data;
+
+	for (unsigned int i=0; i<src_map.stoplines.data.size();i++)
+	{
+		UtilityHNS::AisanStopLineFileReader::AisanStopLine stop_line;
+
+		stop_line.ID = src_map.stoplines.data.at(i).id;
+		stop_line.LID = src_map.stoplines.data.at(i).lid;
+		stop_line.LinkID = src_map.stoplines.data.at(i).linkid;
+		stop_line.SignID = src_map.stoplines.data.at(i).signid;
+		stop_line.TLID = src_map.stoplines.data.at(i).tlid;
+		stop_line_data.push_back(stop_line);
+	}
+
+
+	std::vector<UtilityHNS::AisanSignalFileReader::AisanSignal> signal_data;
+	for (unsigned int i=0; i<src_map.signals.data.size();i++)
+	{
+		UtilityHNS::AisanSignalFileReader::AisanSignal signal;
+
+		signal.ID = src_map.signals.data.at(i).id;
+		signal.PLID = src_map.signals.data.at(i).plid;
+		signal.LinkID = src_map.signals.data.at(i).linkid;
+		signal.Type = src_map.signals.data.at(i).type;
+		signal.VID = src_map.signals.data.at(i).vid;
+		signal_data.push_back(signal);
+	}
+
+	std::vector<UtilityHNS::AisanVectorFileReader::AisanVector> vector_data;
+	for (unsigned int i = 0; i< src_map.vectors.data.size();i++)
+	{
+		UtilityHNS::AisanVectorFileReader::AisanVector vector;
+
+		vector.Hang = src_map.vectors.data.at(i).hang;
+		vector.PID = src_map.vectors.data.at(i).pid;
+		vector.VID = src_map.vectors.data.at(i).vid;
+		vector.Vang = src_map.vectors.data.at(i).vang;
+		vector_data.push_back(vector);
+	}
+
+
+
 	std::vector<UtilityHNS::AisanAreasFileReader::AisanArea> areas;
 	std::vector<UtilityHNS::AisanIntersectionFileReader::AisanIntersection> inters;
-	std::vector<UtilityHNS::AisanLinesFileReader::AisanLine> line_data;
-	std::vector<UtilityHNS::AisanStopLineFileReader::AisanStopLine> stop_line_data;
-	std::vector<UtilityHNS::AisanSignalFileReader::AisanSignal> signal_data;
-	std::vector<UtilityHNS::AisanVectorFileReader::AisanVector> vector_data;
-	std::vector<UtilityHNS::AisanDataConnFileReader::DataConn> conn_data;
+	std::vector<UtilityHNS::AisanDataConnFileReader::DataConn> conn_data; // right now we don't have this
 
 	PlannerHNS::GPSPoint origin;//(m_OriginPos.position.x, m_OriginPos.position.y, m_OriginPos.position.z, 0);
 	PlannerHNS::MappingHelpers::ConstructRoadNetworkFromRosMessage(lanes, points, dts,inters, areas, line_data, stop_line_data, signal_data, vector_data,conn_data, origin, out_map);
@@ -711,12 +775,12 @@ void way_planner_core::PlannerMainLoop()
 		{
 			std::cout <<"current pos: "<<m_CurrentPose.pos.ToString() << std::endl;
 			std::cout <<"goal pos: "<<m_GoalPose.pos.ToString()<<std::endl;
-			            m_CurrentPose.pos.x = -14777.300186157227;
-            m_CurrentPose.pos.y = -84744.421209335327;
-            m_CurrentPose.pos.a = 2.3411519998257231;
-            m_GoalPose.pos.x = -14782.307474136353;
-            m_GoalPose.pos.y = -84744.421209335327;
-            m_GoalPose.pos.a = 2.3411519998257231;
+			//             m_CurrentPose.pos.x = -14777.300186157227;
+            // m_CurrentPose.pos.y = -84744.421209335327;
+            // m_CurrentPose.pos.a = 2.3411519998257231;
+            // m_GoalPose.pos.x = -14782.307474136353;
+            // m_GoalPose.pos.y = -84744.421209335327;
+            // m_GoalPose.pos.a = 2.3411519998257231;
 
 			PlannerHNS::WayPoint startPoint = m_CurrentPose;
 			PlannerHNS::WayPoint goalPoint = m_GoalPose; //m_GoalsPos.at(m_iCurrentGoalIndex);

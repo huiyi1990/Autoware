@@ -1347,6 +1347,9 @@ WayPoint* PlanningHelpers::BuildPlanningSearchTreeV2(WayPoint* pStart,
 	double 		nCounter 		= 0;
 
 
+
+	//
+
 	while(nextLeafToTrace.size()>0)
 	{
 		nCounter++;
@@ -1363,23 +1366,23 @@ WayPoint* PlanningHelpers::BuildPlanningSearchTreeV2(WayPoint* pStart,
 			}
 		}
 
-		WayPoint* pH 	= nextLeafToTrace.at(min_cost_index).second;
+		WayPoint* pH 	= nextLeafToTrace.at(min_cost_index).second; // find minimun cost waypoint for all piar in nextLefttoTrace
 
 		assert(pH != 0);
 
-		nextLeafToTrace.erase(nextLeafToTrace.begin()+min_cost_index);
+		nextLeafToTrace.erase(nextLeafToTrace.begin()+min_cost_index);//delete the selected one
 //!!!!!!!!!!!!!!zhege distance become larger
 		double distance_to_goal = distance2points(pH->pos, goalPos.pos);
 		double angle_to_goal = UtilityH::AngleBetweenTwoAnglesPositive(UtilityH::FixNegativeAngle(pH->pos.a), UtilityH::FixNegativeAngle(goalPos.pos.a));
 		if( distance_to_goal <= 0.1 && angle_to_goal < M_PI_4)
 		{
 			cout << "Goal Found, LaneID: " << pH->laneId <<", Distance : " << distance_to_goal << ", Angle: " << angle_to_goal*RAD2DEG << endl;
-			pGoalCell = pH;
+			pGoalCell = pH;  // distance<-.1 and angle<pi/4 treated as to the goal
 			break;
 		}
 		else
 		{
-
+            // if the waypoint has left point && no left lane belong to waypoint &&enable lane change
 			if(pH->pLeft && !CheckLaneExits(all_cells_to_delete, pH->pLeft->pLane) && bEnableLaneChange)
 			{
 				wp = new WayPoint();
@@ -1397,8 +1400,8 @@ WayPoint* PlanningHelpers::BuildPlanningSearchTreeV2(WayPoint* pStart,
 				wp->pRight = pH;
 				wp->pRight = 0;
 
-				nextLeafToTrace.push_back(make_pair(pH, wp));
-				all_cells_to_delete.push_back(wp);
+				nextLeafToTrace.push_back(make_pair(pH, wp)); //add ph to phleft
+				all_cells_to_delete.push_back(wp); //add ph left
 			}
 
 			if(pH->pRight && !CheckLaneExits(all_cells_to_delete, pH->pRight->pLane) && bEnableLaneChange)
@@ -1421,8 +1424,11 @@ WayPoint* PlanningHelpers::BuildPlanningSearchTreeV2(WayPoint* pStart,
 				all_cells_to_delete.push_back(wp);
 			}
 
+			// add all the front point into all cells to delete and nextLeafToTrace (from one start search all depends)
 			for(unsigned int i =0; i< pH->pFronts.size(); i++)
 			{
+				//?????? what is the meaning for node???
+				   // has this lane && has front point && no way point already in all cells to delete
 				if(CheckLaneIdExits(globalPath, pH->pLane) && pH->pFronts.at(i) && !CheckNodeExits(all_cells_to_delete, pH->pFronts.at(i)))
 				{
 					wp = new WayPoint();
@@ -1446,7 +1452,7 @@ WayPoint* PlanningHelpers::BuildPlanningSearchTreeV2(WayPoint* pStart,
 			}
 		}
 
-		if(distance > DistanceLimit && globalPath.size()==0)
+		if(distance > DistanceLimit && globalPath.size()==0) // if the distance too large
 		{
 			//if(!pGoalCell)
 			cout << "Goal Not Found, LaneID: " << pH->laneId <<", Distance : " << distance << endl;
@@ -1848,6 +1854,7 @@ void PlanningHelpers::TraversePathTreeBackwards(WayPoint* pHead, WayPoint* pStar
 		if(pHead->pBacks.size()>0)
 		{
 			localPaths.push_back(localPath);
+			                          // cost minimux points
 			TraversePathTreeBackwards(GetMinCostCell(pHead->pBacks, globalPathIds),pStartWP, globalPathIds, localPath, localPaths);
 			pHead->bDir = FORWARD_DIR;
 			localPath.push_back(*pHead);
