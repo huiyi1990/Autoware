@@ -53,7 +53,7 @@ PlannerX::PlannerX()
 	m_nContourPoints = 0;
 	m_nOriginalPoints = 0;
 	m_TrackingTime = 0;
-	bInitPos = false;
+	bInitPos = true;
 	bNewCurrentPos = false;
 	bNewClusters = false;
 	bNewBoxes = false;
@@ -73,6 +73,7 @@ PlannerX::PlannerX()
 	m_ObstacleTracking.m_MAX_TRACKS_AFTER_LOSING = 5;
 	m_ObstacleTracking.m_DT = 0.12;
 	m_ObstacleTracking.m_bUseCenterOnly = true;
+	bMap = false;
 
 
 	int iSource = 0;
@@ -88,11 +89,11 @@ PlannerX::PlannerX()
 
 	UpdatePlanningParams();
 
-	tf::StampedTransform transform;
-	RosHelpers::GetTransformFromTF("map", "world", transform);
-	m_OriginPos.position.x  = transform.getOrigin().x();
-	m_OriginPos.position.y  = transform.getOrigin().y();
-	m_OriginPos.position.z  = transform.getOrigin().z();
+//	tf::StampedTransform transform;
+//	RosHelpers::GetTransformFromTF("local_map", "world", transform);
+	m_OriginPos.position.x  = 0;
+	m_OriginPos.position.y  = 0;
+	m_OriginPos.position.z  = 0;
 
 
 	pub_LocalPath = nh.advertise<waypoint_follower_msgs::lane>("final_waypoints", 100,true);
@@ -174,15 +175,15 @@ PlannerX::PlannerX()
 		m_bOutsideControl = 1;
 
 	sub_AStarPath 		= nh.subscribe("/astar_path", 				10,		&PlannerX::callbackGetAStarPath, 		this);
-	sub_WayPlannerPaths = nh.subscribe("/lane_waypoints_array", 	1,		&PlannerX::callbackGetWayPlannerPath, 	this);
+	//sub_WayPlannerPaths = nh.subscribe("/lane_waypoints_array", 	1,		&PlannerX::callbackGetWayPlannerPath, 	this);
 
 	if(m_MapSource == MAP_AUTOWARE)
 	{
-		sub_map_points 	= nh.subscribe("/vector_map_info/point", 		1, &PlannerX::callbackGetVMPoints, 		this);
-		sub_map_lanes 	= nh.subscribe("/vector_map_info/lane", 		1, &PlannerX::callbackGetVMLanes, 		this);
-		sub_map_nodes 	= nh.subscribe("/vector_map_info/node", 		1, &PlannerX::callbackGetVMNodes, 		this);
-		sup_stop_lines 	= nh.subscribe("/vector_map_info/stop_line",	1, &PlannerX::callbackGetVMStopLines, 	this);
-		sub_dtlanes 	= nh.subscribe("/vector_map_info/dtlane", 		1, &PlannerX::callbackGetVMCenterLines,	this);
+		sub_map_points 	= nh.subscribe("/local_vector_map_info/point", 		1, &PlannerX::callbackGetVMPoints, 		this);
+		sub_map_lanes 	= nh.subscribe("/local_vector_map_info/lane", 		1, &PlannerX::callbackGetVMLanes, 		this);
+		sub_map_nodes 	= nh.subscribe("/local_vector_map_info/node", 		1, &PlannerX::callbackGetVMNodes, 		this);
+		sup_stop_lines 	= nh.subscribe("/local_vector_map_info/stop_line",	1, &PlannerX::callbackGetVMStopLines, 	this);
+		sub_dtlanes 	= nh.subscribe("/local_vector_map_info/dtlane", 		1, &PlannerX::callbackGetVMCenterLines,	this);
 	}
 
 	sub_simulated_obstacle_pose_rviz = nh.subscribe("/clicked_point", 		1, &PlannerX::callbackGetRvizPoint,	this);
@@ -477,17 +478,17 @@ void PlannerX::callbackGetRvizPoint(const geometry_msgs::PointStampedConstPtr& m
 	pcl::fromROSMsg(clusters_array.clusters.at(0).cloud, point_cloud);
 	sensor_msgs::PointCloud2 cloud_msg;
 	pcl::toROSMsg(point_cloud, cloud_msg);
-	cloud_msg.header.frame_id = "map";
+	cloud_msg.header.frame_id = "local_map";
 	pub_cluster_cloud.publish(cloud_msg);
 
 	// bounding box to represent the obstacle, !!! while we need the obstacle behavior and predicted path for planning
 	if(m_TrackedClusters.size()>0)
 	{
 		jsk_recognition_msgs::BoundingBoxArray boxes_array;
-		boxes_array.header.frame_id = "map";
+		boxes_array.header.frame_id = "local_map";
 		boxes_array.header.stamp  = ros::Time();
 		jsk_recognition_msgs::BoundingBox box;
-		box.header.frame_id = "map";
+		box.header.frame_id = "local_map";
 		box.header.stamp = ros::Time();
 		box.pose.position.x = m_TrackedClusters.at(0).center.pos.x;
 		box.pose.position.y = m_TrackedClusters.at(0).center.pos.y;
@@ -757,6 +758,7 @@ void PlannerX::callbackGetAStarPath(const waypoint_follower_msgs::LaneArrayConst
 
 void PlannerX::callbackGetWayPlannerPath(const waypoint_follower_msgs::LaneArrayConstPtr& msg)
 {
+
 	if(msg->lanes.size() > 0)
 	{
 		m_WayPlannerPaths.clear();
@@ -876,37 +878,49 @@ void PlannerX::PlannerMainLoop()
 	UtilityHNS::UtilityH::GetTickCount(trackingTimer);
 	PlannerHNS::WayPoint prevState, state_change;
 
+
+	if(m_MapSource == MAP_KML_FILE && !bKmlMapLoaded)
+	{
+		bKmlMapLoaded = true;
+		PlannerHNS::MappingHelpers::LoadKML(m_KmlMapPath, m_Map);
+		//sub_WayPlannerPaths = nh.subscribe("/lane_waypoints_array", 	10,		&PlannerX::callbackGetWayPlannerPath, 	this);
+	}
+	else if(m_MapSource == MAP_FOLDER && !bKmlMapLoaded)
+	{
+		bKmlMapLoaded = true;
+		PlannerHNS::MappingHelpers::ConstructRoadNetworkFromDataFiles(m_KmlMapPath, m_Map, true);
+	}
+	else if(m_MapSource == MAP_AUTOWARE)
+	{
+		 if(m_AwMap.bDtLanes && m_AwMap.bLanes && m_AwMap.bPoints)
+		 {
+			timespec timerTemp;
+			UtilityHNS::UtilityH::GetTickCount(timerTemp);
+			 m_AwMap.bDtLanes = m_AwMap.bLanes = m_AwMap.bPoints = false;
+			 RosHelpers::UpdateRoadMap(m_AwMap,m_Map);
+			 bMap = true;
+			 std::cout << "Converting Vector Map Time : " <<UtilityHNS::UtilityH::GetTimeDiffNow(timerTemp) << std::endl;
+			 //sub_WayPlannerPaths = nh.subscribe("/lane_waypoints_array", 	10,		&PlannerX::callbackGetWayPlannerPath, 	this);
+		 }
+	}
+
 	while (ros::ok())
 	{
 		timespec iterationTime;
 		UtilityHNS::UtilityH::GetTickCount(iterationTime);
 
 		ros::spinOnce();
-
-		if(m_MapSource == MAP_KML_FILE && !bKmlMapLoaded)
-		{
-			bKmlMapLoaded = true;
-			PlannerHNS::MappingHelpers::LoadKML(m_KmlMapPath, m_Map);
-			//sub_WayPlannerPaths = nh.subscribe("/lane_waypoints_array", 	10,		&PlannerX::callbackGetWayPlannerPath, 	this);
-		}
-		else if(m_MapSource == MAP_FOLDER && !bKmlMapLoaded)
-		{
-			bKmlMapLoaded = true;
-			PlannerHNS::MappingHelpers::ConstructRoadNetworkFromDataFiles(m_KmlMapPath, m_Map, true);
-		}
-		else if(m_MapSource == MAP_AUTOWARE)
-		{
-			 if(m_AwMap.bDtLanes && m_AwMap.bLanes && m_AwMap.bPoints)
-			 {
-				timespec timerTemp;
-				UtilityHNS::UtilityH::GetTickCount(timerTemp);
-				 m_AwMap.bDtLanes = m_AwMap.bLanes = m_AwMap.bPoints = false;
-				 RosHelpers::UpdateRoadMap(m_AwMap,m_Map);
-				 std::cout << "Converting Vector Map Time : " <<UtilityHNS::UtilityH::GetTimeDiffNow(timerTemp) << std::endl;
-				 //sub_WayPlannerPaths = nh.subscribe("/lane_waypoints_array", 	10,		&PlannerX::callbackGetWayPlannerPath, 	this);
-			 }
-		}
-
+if(m_AwMap.bDtLanes && m_AwMap.bLanes && m_AwMap.bPoints && !bMap)
+		 {
+			timespec timerTemp;
+			UtilityHNS::UtilityH::GetTickCount(timerTemp);
+			 m_AwMap.bDtLanes = m_AwMap.bLanes = m_AwMap.bPoints = false;
+			 RosHelpers::UpdateRoadMap(m_AwMap,m_Map);
+			 bMap = true;
+			 std::cout << "Converting Vector Map Time : " <<UtilityHNS::UtilityH::GetTimeDiffNow(timerTemp) << std::endl;
+			 //sub_WayPlannerPaths = nh.subscribe("/lane_waypoints_array", 	10,		&PlannerX::callbackGetWayPlannerPath, 	this);
+		 }
+		 
 		if(bInitPos && m_LocalPlanner.m_TotalPath.size()>0)
 		{
 //			bool bMakeNewPlan = false;
@@ -914,13 +928,23 @@ void PlannerX::PlannerMainLoop()
 //			if(drift > 10)
 //				bMakeNewPlan = true;
 
+		m_CurrentPos.pos.x = 19.097;
+std::cout<<"pos:"<<'\n';
+			m_CurrentPos.pos.y = -20.570;
+			m_CurrentPos.pos.a = 2.248;
 			m_LocalPlanner.m_pCurrentBehaviorState->GetCalcParams()->bOutsideControl = m_bOutsideControl;
 			m_LocalPlanner.state = m_CurrentPos;
 
 			double dt  = UtilityHNS::UtilityH::GetTimeDiffNow(m_PlanningTimer);
 			UtilityHNS::UtilityH::GetTickCount(m_PlanningTimer);
 
-			m_CurrentBehavior = m_LocalPlanner.DoOneStep(dt, m_VehicleState, m_TrackedClusters, 1, m_Map, m_bEmergencyStop, m_bGreenLight, true);
+            m_LocalPlanner.FirstLocalizeMe(m_CurrentPos);
+			m_VehicleState.speed = 0;
+			m_VehicleState.steer = 0;
+			m_TrackedClusters.clear();
+			m_bEmergencyStop = 0;
+			m_bGreenLight = 1;
+			m_CurrentBehavior = m_LocalPlanner.DoOneStep(dt, m_VehicleState, m_TrackedClusters, 1, m_Map, m_bEmergencyStop, m_bGreenLight, false); // false means simulation environment
 
 			visualization_msgs::Marker behavior_rviz;
 
@@ -968,7 +992,7 @@ void PlannerX::PlannerMainLoop()
 			geometry_msgs::Pose p_id, p_pose, p_box;
 
 
-			sim_data.header.frame_id = "map";
+			sim_data.header.frame_id = "local_map";
 			sim_data.header.stamp = ros::Time();
 
 			p_id.position.x = 0;
@@ -1024,10 +1048,11 @@ void PlannerX::PlannerMainLoop()
 
 
 		}
-		else
+		else if (bMap)
 		{
 			UtilityHNS::UtilityH::GetTickCount(m_PlanningTimer);
-			sub_WayPlannerPaths = nh.subscribe("/lane_waypoints_array", 	1,		&PlannerX::callbackGetWayPlannerPath, 	this);
+			
+sub_WayPlannerPaths = nh.subscribe("/lane_waypoints_array", 	1,		&PlannerX::callbackGetWayPlannerPath, 	this);
 		}
 
 

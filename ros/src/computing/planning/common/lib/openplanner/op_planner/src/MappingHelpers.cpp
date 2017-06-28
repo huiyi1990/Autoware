@@ -561,7 +561,7 @@ void MappingHelpers::ConstructRoadNetworkFromRosMessage(const std::vector<Utilit
 	}
 
 	cout << "Map loaded from data with " << roadLanes.size()  << " lanes" << endl;
-	WriteMapToFile("map_data_ana",map);
+//	WriteMapToFile("map_data_ana",map);
 	cout << "finish write map data to file"<< endl;
 }
 
@@ -1316,6 +1316,7 @@ void MappingHelpers::SetTrafficSignsList(TiXmlElement* pElem, std::vector<Traffi
 
 WayPoint* MappingHelpers::GetClosestWaypointFromMap(const WayPoint& pos, RoadNetwork& map)
 {
+	// I don't think get clost lane first ,get close point second make any senses, how about directly search all the points
 	double distance_to_nearest_lane = 1;
 	Lane* pLane = 0;
 	while(distance_to_nearest_lane < 100 && pLane == 0)

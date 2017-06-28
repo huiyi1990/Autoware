@@ -77,7 +77,7 @@ void RosHelpers::ConvertFromPlannerHToAutowarePathFormat(const std::vector<Plann
 void RosHelpers::ConvertFromRoadNetworkToAutowareVisualizeMapFormat(const PlannerHNS::RoadNetwork& map,	visualization_msgs::MarkerArray& markerArray)
 {
 	visualization_msgs::Marker lane_waypoint_marker;
-	lane_waypoint_marker.header.frame_id = "map";
+	lane_waypoint_marker.header.frame_id = "local_map";
 	lane_waypoint_marker.header.stamp = ros::Time();
 	lane_waypoint_marker.ns = "road_network_vector_map";
 	lane_waypoint_marker.type = visualization_msgs::Marker::LINE_STRIP;
@@ -125,7 +125,7 @@ void RosHelpers::ConvertFromPlannerHRectangleToAutowareRviz(const std::vector<Pl
 	//if(safety_rect.size() != 4) return;
 
 	visualization_msgs::Marker lane_waypoint_marker;
-	lane_waypoint_marker.header.frame_id = "map";
+	lane_waypoint_marker.header.frame_id = "local_map";
 	lane_waypoint_marker.header.stamp = ros::Time();
 	lane_waypoint_marker.ns = "global_lane_array_marker";
 	lane_waypoint_marker.type = visualization_msgs::Marker::LINE_STRIP;
@@ -190,7 +190,7 @@ void RosHelpers::ConvertFromPlannerHToAutowareVisualizePathFormat(const std::vec
 			visualization_msgs::MarkerArray& markerArray)
 {
 	visualization_msgs::Marker lane_waypoint_marker;
-	lane_waypoint_marker.header.frame_id = "map";
+	lane_waypoint_marker.header.frame_id = "local_map";
 	lane_waypoint_marker.header.stamp = ros::Time();
 	lane_waypoint_marker.ns = "global_lane_array_marker";
 	lane_waypoint_marker.type = visualization_msgs::Marker::LINE_STRIP;
@@ -263,7 +263,7 @@ void RosHelpers::ConvertFromPlannerHToAutowareVisualizePathFormat(const std::vec
 			visualization_msgs::MarkerArray& markerArray)
 {
 	visualization_msgs::Marker lane_waypoint_marker;
-	lane_waypoint_marker.header.frame_id = "map";
+	lane_waypoint_marker.header.frame_id = "local_map";
 	lane_waypoint_marker.header.stamp = ros::Time();
 	lane_waypoint_marker.ns = "global_lane_array_marker";
 	lane_waypoint_marker.type = visualization_msgs::Marker::LINE_STRIP;
@@ -308,7 +308,7 @@ void RosHelpers::ConvertFromPlannerObstaclesToAutoware(const PlannerHNS::WayPoin
 		visualization_msgs::MarkerArray& detectedPolygons)
 {
 	visualization_msgs::Marker lane_waypoint_marker;
-	lane_waypoint_marker.header.frame_id = "map";
+	lane_waypoint_marker.header.frame_id = "local_map";
 	lane_waypoint_marker.header.stamp = ros::Time();
 	lane_waypoint_marker.ns = "detected_polygons";
 	lane_waypoint_marker.type = visualization_msgs::Marker::LINE_STRIP;
@@ -320,7 +320,7 @@ void RosHelpers::ConvertFromPlannerObstaclesToAutoware(const PlannerHNS::WayPoin
 	lane_waypoint_marker.frame_locked = false;
 
 	visualization_msgs::Marker corner_marker;
-	corner_marker.header.frame_id = "map";
+	corner_marker.header.frame_id = "local_map";
 	corner_marker.header.stamp = ros::Time();
 	corner_marker.ns = "Polygon_Corners";
 	corner_marker.type = visualization_msgs::Marker::SPHERE;
@@ -333,7 +333,7 @@ void RosHelpers::ConvertFromPlannerObstaclesToAutoware(const PlannerHNS::WayPoin
 
 
 	visualization_msgs::Marker quarters_marker;
-	quarters_marker.header.frame_id = "map";
+	quarters_marker.header.frame_id = "local_map";
 	quarters_marker.header.stamp = ros::Time();
 	quarters_marker.ns = "Quarters_Lines";
 	quarters_marker.type = visualization_msgs::Marker::LINE_STRIP;
@@ -348,7 +348,7 @@ void RosHelpers::ConvertFromPlannerObstaclesToAutoware(const PlannerHNS::WayPoin
 	quarters_marker.frame_locked = false;
 
 	visualization_msgs::Marker direction_marker;
-	direction_marker.header.frame_id = "map";
+	direction_marker.header.frame_id = "local_map";
 	direction_marker.header.stamp = ros::Time();
 	direction_marker.ns = "Object_Direction";
 	direction_marker.type = visualization_msgs::Marker::ARROW;
@@ -364,7 +364,7 @@ void RosHelpers::ConvertFromPlannerObstaclesToAutoware(const PlannerHNS::WayPoin
 
 
 	visualization_msgs::Marker velocity_marker;
-	velocity_marker.header.frame_id = "map";
+	velocity_marker.header.frame_id = "local_map";
 	velocity_marker.header.stamp = ros::Time();
 	velocity_marker.ns = "detected_polygons_velocity";
 	velocity_marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
@@ -532,7 +532,7 @@ std::string RosHelpers::GetBehaviorNameFromCode(const PlannerHNS::STATE_TYPE& be
 
 void RosHelpers::VisualizeBehaviorState(const PlannerHNS::WayPoint& currState, const PlannerHNS::BehaviorState& beh, const bool& bGreenLight, const int& avoidDirection, visualization_msgs::Marker& behaviorMarker)
 {
-	behaviorMarker.header.frame_id = "map";
+	behaviorMarker.header.frame_id = "local_map";
 	behaviorMarker.header.stamp = ros::Time();
 	behaviorMarker.ns = "detected_polygons_velocity";
 	behaviorMarker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;

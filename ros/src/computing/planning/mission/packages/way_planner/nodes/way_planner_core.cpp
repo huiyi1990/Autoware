@@ -457,6 +457,7 @@ bool way_planner_core::GenerateGlobalPlan(PlannerHNS::WayPoint& startPoint, Plan
 
 #else
 	std::vector<int> predefinedLanesIds;
+	//empty predefinedLaneIds and empty generatedTotalPaths
 
 	double ret = m_PlannerH.PlanUsingDP(startPoint, goalPoint,MAX_GLOBAL_PLAN_DISTANCE, m_params.bEnableLaneChange,predefinedLanesIds,m_Map, generatedTotalPaths);
 #endif

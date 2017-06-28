@@ -861,7 +861,7 @@ bool LocalPlannerH::CalculateObstacleCosts(PlannerHNS::RoadNetwork& map, const P
 	 if(!bLive)
 		 SimulateOdoPosition(dt, vehicleState);
 
-	UpdateCurrentLane(map, 3.0); // set current lane
+	UpdateCurrentLane(map, 3.0); // set current lane has someproblem in the state condition inside ???????
 
 	timespec costTimer;
 	UtilityH::GetTickCount(costTimer);

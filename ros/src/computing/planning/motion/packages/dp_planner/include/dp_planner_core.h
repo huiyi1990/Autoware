@@ -148,6 +148,7 @@ protected:
 	struct timespec m_PlanningTimer;
 	AutowareRoadNetwork m_AwMap;
   	PlannerHNS::RoadNetwork m_Map;
+  	bool bMap;
   	MAP_SOURCE_TYPE	m_MapSource;
   	bool	bKmlMapLoaded;
   	std::string m_KmlMapPath;
